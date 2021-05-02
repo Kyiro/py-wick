@@ -5,3 +5,5 @@ target/
 *.dll
 *.usmap
 global.*
+build/
+dist/
