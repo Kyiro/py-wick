@@ -1,0 +1,14 @@
+[package]
+name = "py_wick"
+version = "0.1.0"
+authors = ["Kyiro <github.com/Kyiro>"]
+edition = "2018"
+
+[lib]
+name = "py_wick"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+john-wick-parse = { git = "https://github.com/SirWaddles/JohnWickParse" }
+pyo3 = { version = "0.13.2", features = ["extension-module"] }
+pythonize = "0.13.0"

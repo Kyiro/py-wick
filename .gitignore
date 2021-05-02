@@ -1,0 +1,7 @@
+__pycache__
+*.pyd
+target/
+*.egg-info
+*.dll
+*.usmap
+global.*
