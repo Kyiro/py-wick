@@ -1,7 +1,5 @@
 from os import listdir
-from sys import exit
 import py_wick
-import ujson as json
 
 PATH = "D:\\Games\\Fortnite\\FortniteGame\\Content\\Paks"
 AES = "F941D9809A67D9BD104273E3C649F4395B6B6A874D16515F404B50D6A9FFA5A4"
