@@ -14,7 +14,6 @@ use pythonize::pythonize;
     TODO
     - Proper Packages (similiar to node-wick)
       A workaround is currently being used.
-    - make get_data() to return a dict
 */
 
 #[pyclass]
