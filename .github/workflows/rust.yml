@@ -1,0 +1,52 @@
+name: Build
+
+on: [push]
+
+jobs:
+  build:
+    name: Build
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.7', '3.8']
+        build: [linux, macos, windows]
+        include:
+          - build: linux
+            os: ubuntu-latest
+            rust: stable
+          - build: macos
+            os: macos-latest
+            rust: stable
+          - build: windows
+            platform: x64
+            os: windows-latest
+            rust: stable
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install Rust
+        run: |
+          rustup update ${{ matrix.rust }} --no-self-update 
+          rustup default ${{ matrix.rust }}
+      - name: Test
+        run: cargo test --verbose
+        
+      - uses: actions/setup-python@v2
+
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==1.11.0
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheel
+        
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheel/*.whl
