@@ -36,8 +36,6 @@ jobs:
         run: |
           rustup update ${{ matrix.rust }} --no-self-update 
           rustup default ${{ matrix.rust }}
-      - name: Test
-        run: cargo test --verbose
         
       - uses: actions/setup-python@v2
 
