@@ -1,50 +1,98 @@
-name: Build
-
-on: [push]
-
+name: CI
+on:
+  push:
+    tags:
+      - "*"
 jobs:
-  build:
-    name: Build
-
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}  - ${{ matrix.vers }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.7', '3.8']
-        build: [linux, macos, windows]
         include:
-          - build: linux
-            os: ubuntu-latest
-            rust: stable
-          - build: macos
-            os: macos-latest
-            rust: stable
-          - build: windows
-            platform: x64
-            os: windows-latest
-            rust: stable
+          - vers: i686
+            os: ubuntu-20.04
+          - vers: aarch64
+            os: ubuntu-20.04
+          - vers: auto64
+            os: ubuntu-20.04
+          - vers: arm64
+            os: macos-10.15
+          - vers: auto64
+            os: macos-10.15
+          - vers: auto64
+            os: windows-2019
+
+    env:
+      SCCACHE_VERSION: 0.2.13
+      CIBW_BEFORE_ALL_LINUX: "curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain stable -y && yum install -y openssl-devel"
+      CIBW_BUILD_VERBOSITY: "1" # Make some more noise so that travis doesn't stall
+      CIBW_ENVIRONMENT: 'PATH="$PATH:$HOME/.cargo/bin"'
+      CIBW_SKIP: "cp27-* cp34-* cp35-* pp* *-win32"
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install Rust
-        run: |
-          rustup update ${{ matrix.rust }} --no-self-update 
-          rustup default ${{ matrix.rust }}
-        
+      - uses: actions/checkout@v2
+
       - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: "3.8"
 
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==1.11.0
+      - name: Install Visual C++ for Python 2.7
+        if: runner.os == 'Windows'
+        run: choco install vcpython27 -f -y
 
-      - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheel
-        
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
+      - name: wheels Linux ${{ matrix.vers }}
+        if: runner.os == 'Linux'
+        uses: joerick/cibuildwheel@v1.10.0
+        env:
+          CIBW_ARCHS_LINUX: ${{ matrix.vers }}
+
+      - name: wheels Macos ${{ matrix.vers }}
+        if: runner.os == 'Macos'
+        uses: joerick/cibuildwheel@v1.10.0
+        env:
+          CIBW_ARCHS_MACOS: ${{ matrix.vers }}
+
+      - name: wheels Windows ${{ matrix.vers }}
+        if: runner.os == 'Windows'
+        uses: joerick/cibuildwheel@v1.10.0
+        env:
+          CIBW_ARCHS_WINDOWS: ${{ matrix.vers }}
+
       - uses: actions/upload-artifact@v2
         with:
-          path: ./wheel/*.whl
+          path: ./wheelhouse/*.whl
+
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: "3.8"
+
+      - name: Build sdist
+        run: |
+          python -m pip install setuptools-rust setuptools wheel
+          python setup.py sdist
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist/*.tar.gz
