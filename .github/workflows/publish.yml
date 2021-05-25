@@ -106,7 +106,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body: |
-            view the CHANGELOG.md for full changes
+            https://pypi.org/project/py-wick/
           files: |
             dist/*
         env:
