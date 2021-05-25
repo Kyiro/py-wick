@@ -27,29 +27,12 @@ jobs:
       CIBW_SKIP: "cp27-* cp34-* cp35-* pp* *-win32"
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
 
-      - name: Cache Cargo registry
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-stable-cargo-registry-
-      - name: Cache Cargo index
-        uses: actions/cache@v1
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-stable-cargo-index-
-      - name: Cache Cargo build
-        uses: actions/cache@v1
-        with:
-          path: target/debug
-          key: ${{ runner.os }}-stable-debug-target-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-stable-debug-target-
+      - uses: Swatinem/rust-cache@v1
       - uses: actions/checkout@v2
 
       - uses: actions/setup-python@v2
